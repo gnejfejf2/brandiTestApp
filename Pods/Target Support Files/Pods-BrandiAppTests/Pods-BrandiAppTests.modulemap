@@ -1,0 +1,6 @@
+framework module Pods_BrandiAppTests {
+  umbrella header "Pods-BrandiAppTests-umbrella.h"
+
+  export *
+  module * { export * }
+}
