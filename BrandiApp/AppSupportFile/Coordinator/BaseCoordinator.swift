@@ -30,5 +30,6 @@ class BaseCoordinator: Coordinator {
         if let index = childCoordinators.firstIndex(where: { $0 === coordinator }) {
             childCoordinators.remove(at: index)
         }
+        coordinator.navigationController.popViewController(animated: true)
     }
 }

@@ -44,20 +44,15 @@ extension NetworkAPI : TargetType {
     var task: Task {
         switch self {
         case .search(let parameters) :
+            print(parameters)
             return .requestParameters(parameters: parameters.toDictionary , encoding: URLEncoding.queryString)
             
         }
     }
     var sampleData: Data {
         switch self {
-            //        case .search(let keyword , _ , let paingCount ) :
-            //            return stubbedResponse("Search\(keyword)\(paingCount)")
-            //        case .loginAccesstoken :
-            //            return stubbedResponse("getUserInfo")
-            //        case .getUserInfo :
-            //            return stubbedResponse("getUserInfo")
-            //        case .getUserStarredRepos(_ , let page) :
-            //            return stubbedResponse("getUserStarredRepos\(page)")
+        case .search(let parmas ) :
+            return stubbedResponse("Search\(parmas.query)\(parmas.page)")
         default :
             return stubbedResponse("getUserInfo")
         }

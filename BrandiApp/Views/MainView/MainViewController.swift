@@ -16,7 +16,7 @@ import RxGesture
 
 
 class MainViewController: SuperViewControllerSetting<MainViewModel> {
-    lazy var searchBar = UISearchBar().then{
+    lazy var searchBar = DoneSearchBar().then{
         $0.placeholder = "검색어를 입력해주세요."
         $0.searchBarStyle = .minimal
         
@@ -49,41 +49,90 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
         return collectionView
     }()
     
-   
+    
     override func uiDrawing() {
         view.addSubview(searchBar)
         view.addSubview(searchImageCollectionView)
-        
+      
+
         searchBar.snp.makeConstraints { make in
             make.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
         }
         searchImageCollectionView.snp.makeConstraints { make in
             make.leading.bottom.trailing.equalTo(view.safeAreaLayoutGuide)
             make.top.equalTo(searchBar.snp.bottom)
-//            make.bottom.equalTo()
         }
+        
+    
+        
         
     }
     
+    override func uiSetting() {
+        
+        searchImageCollectionView.rx
+            .setDelegate(self)
+            .disposed(by: disposeBag)
+
+    }
+    
     override func viewModelBinding() {
-        let searchAction = PublishSubject<Void>()
+        let searchAction = searchBar.rx.text
+            .orEmpty
+            .filter { $0 != "" }
+            .asDriverOnErrorNever()
+            //필수 조건 2번  UISearchBar에 문자를 입력 후 1초가 지나면 자동으로 검색이 됩니다.
+            .debounce(.seconds(1))
+            .distinctUntilChanged()
         
+        let bottomScrollTriger = searchImageCollectionView.rx
+            .reachedBottom(offset: 0)
+            .asDriverOnErrorNever()
+     
+        let cellClick = searchImageCollectionView.rx.modelSelected(ImageSearchModel.self).asDriverOnErrorNever()
         
-        let output = viewModel.transform(input: .init(searchAction: searchAction.asDriverOnErrorNever()))
+        let output = viewModel.transform(input: .init(
+            searchAction: searchAction ,
+            bottomScrollTriger: bottomScrollTriger,
+            cellClick: cellClick
+        ))
         
         
         
         output.imageSearchModels
             .drive(searchImageCollectionView.rx.items(cellIdentifier: ImageCollectionViewCell.id, cellType: ImageCollectionViewCell.self)){(index , element , cell) in
-                
                 cell.itemSetting(item: element)
-                
             }
             .disposed(by: disposeBag)
         
+        output.searchClear
+            .drive{ [weak self] _ in
+                guard let self = self else { return }
+                return self.searchImageCollectionView.setContentOffset(.zero, animated: true)
+            }
+            .disposed(by: disposeBag)
         
-        searchAction.onNext(())
+        output.outputError
+            .drive(onNext: { [ weak self] value in
+                guard let self = self else { return }
+                let alert = UIAlertController(title: "오류", message: value.localizedDescription , preferredStyle: .alert)
+                let success = UIAlertAction(title: "확인", style: .default)
+                alert.addAction(success)
+                self.present(alert, animated: true, completion: nil)
+            })
+            .disposed(by: disposeBag)
+     
     }
     
 
 }
+extension MainViewController : UICollectionViewDelegate{
+
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        view.endEditing(true)
+    }
+}
+
+
+
+

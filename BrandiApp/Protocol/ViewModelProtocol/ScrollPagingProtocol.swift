@@ -5,55 +5,25 @@ import Foundation
 //Class 에서만 사용이가능하도록 AnyObject 채택
 protocol ScrollPagingProtocl : AnyObject {
     
+    
+    
     var totalCount : Int { get set}
     
     var itemCount : Int { get }
-    //스크롤 에따른 페이징 체크
-    //해당값이 True 일때만 추가로 요청을한다
-    var scrollPagingCall : Bool { get set }
+  
     //페이징카운트
     var pagingCount : Int  { get set }
   
    
     func pagingCountClear()
     
-    func pagingCountChecking(requestItemCount : Int)
+    func pagingCountSetting(totalCount : Int)
     
+    func pagingAbleChecking(paingAble : PagingAbleModel , totalCount : Int) -> Bool
 }
 
 
 
-class SuperScrollPagingProtocol : ScrollPagingProtocl {
-    var totalCount: Int = 0
-    
-    var itemCount: Int = 30
-    
-    var scrollPagingCall: Bool = true
-    
-    var pagingCount: Int = 1
-
-  
-   
-
-    
-    func uiDrawing() {
-       
-     
-    }
-    
-    func uiSetting() {
-
-       
-    }
-    
-    func viewModelBinding() {
-        
-    }
-    
-    
-    
-
-}
 
 
 
@@ -63,11 +33,7 @@ extension ScrollPagingProtocl {
     
     func pagingCountClear(){
         self.totalCount = 0
-        
-        self.scrollPagingCall = true
-        
         self.pagingCount  = 1
-        
     }
     //요청하는 아이템의 갯수는 30개
     //최초시작
@@ -75,14 +41,19 @@ extension ScrollPagingProtocl {
     //ex 30개 1페이지 30개
     //점검
     //
-    func pagingCountChecking(requestItemCount : Int)  {
-        self.totalCount += requestItemCount
+    func pagingCountSetting(totalCount : Int)  {
+        self.totalCount = totalCount
   
-        if(self.totalCount < self.itemCount * self.pagingCount){
-            self.scrollPagingCall = false
-        }else{
+        if(!(totalCount < itemCount * pagingCount)){
             self.pagingCount += 1
         }
+    }
+    //이렇게 복잡하게 컨트롤 하지않고 다음 검색에서 주는 is_end , pagingCount 두개만을 사용해도 되지만
+    //한번더 계산함으로 확실하게? 하고 싶어서 직접 아이템의 갯수를 더해서 체크를 했다
+    //좋은 방식인가? 는 의문이 들긴하다
+    func pagingAbleChecking(paingAble : PagingAbleModel , totalCount : Int) -> Bool {
+        pagingCountSetting(totalCount: totalCount)
+        return !paingAble.isEnd && paingAble.pageableCount >= totalCount
     }
     
 }

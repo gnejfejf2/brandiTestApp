@@ -29,17 +29,4 @@ extension ObservableType {
 }
 
 
-//extension ObservableType where Element == Repos {
-//    func localStarredSync() -> Driver<Repos> {
-//        return self.asObservable()
-//            .map{ $0.filter{!UserDefaultsManager.shared.starredRemoveList.contains($0)} }
-//            .map{ item -> Repos in
-//                return item + UserDefaultsManager.shared.starredAddList.filter{!item.contains($0)}
-//            }
-//            .map{
-//                UserDefaultsManager.shared.clearRemoveList()
-//                return $0
-//            }
-//            .asDriverOnErrorNever()
-//    }
-//}
+

@@ -10,7 +10,7 @@ import Foundation
 
 typealias ImageSearchModels = [ImageSearchModel]
 
-struct ImageSearchModel: Codable {
+struct ImageSearchModel: Codable , Equatable {
     let collection, datetime, displaySitename: String
     let docURL: String
     let height: Int
@@ -27,4 +27,20 @@ struct ImageSearchModel: Codable {
         case thumbnailURL = "thumbnail_url"
         case width
     }
+    
+    func returnDescription() -> String{
+        
+        if(self.displaySitename == "" && self.datetime == ""){
+            return ""
+        }else if(self.displaySitename == "" && self.datetime != ""){
+            guard let time = self.datetime.to_ISO_8601_Date()?.to_ISO_8601_Date_String() else { return "" }
+            return "문서 작성 시간 \(time)"
+        }else if(self.displaySitename != "" && self.datetime == ""){
+            return "출처 : \(self.displaySitename)"
+        }else{
+            guard let time = self.datetime.to_ISO_8601_Date()?.to_ISO_8601_Date_String() else { return "출처 : \(self.displaySitename)" }
+            return "출처 : \(self.displaySitename) \n문서 작성 시간 \(time)"
+        }
+    }
+    
 }
