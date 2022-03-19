@@ -34,6 +34,7 @@ class DetailViewController : SuperViewControllerSetting<DetailViewModel>{
         $0.numberOfLines = 0
         $0.font = UIFont.systemFont(ofSize: 18, weight: .bold)
     }
+    
     var safeAreaBackground = UIView().then{
         $0.backgroundColor = .darkGray1.withAlphaComponent(0.75)
     }

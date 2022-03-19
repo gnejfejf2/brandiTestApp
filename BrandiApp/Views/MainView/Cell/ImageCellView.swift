@@ -21,7 +21,6 @@ class ImageCollectionViewCell: UICollectionViewCell, CellSettingProtocl {
     
     
     var mainImageView = UIImageView().then{
-        $0.image = UIImage(named: "은하")
         $0.contentMode = .scaleToFill
         
     }

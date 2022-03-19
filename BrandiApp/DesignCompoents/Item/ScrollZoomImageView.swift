@@ -11,16 +11,11 @@ import Then
 import Kingfisher
 
 class ImageScrollView: UIScrollView , ComponentSettingProtocol{
-    var imageZoomView = UIImageView().then{
-        $0.backgroundColor = .yellow
-        
-    }
+    var imageZoomView = UIImageView()
 
  
     override init(frame: CGRect) {
         super.init(frame: frame)
-
-      
         uiSetting()
     }
 

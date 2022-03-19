@@ -53,6 +53,8 @@ extension ScrollPagingProtocl {
     //좋은 방식인가? 는 의문이 들긴하다
     func pagingAbleChecking(paingAble : PagingAbleModel , totalCount : Int) -> Bool {
         pagingCountSetting(totalCount: totalCount)
+        print(paingAble)
+        print(totalCount)
         return !paingAble.isEnd && paingAble.pageableCount >= totalCount
     }
     

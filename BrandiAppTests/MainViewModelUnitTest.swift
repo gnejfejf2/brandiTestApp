@@ -22,6 +22,7 @@ class MainViewModelUnitTest: XCTestCase {
     let searchAction = PublishSubject<String>()
     let bottomScrollTriger = PublishSubject<Void>()
     let cellClick = PublishSubject<ImageSearchModel>()
+    let sortTypeAction = PublishSubject<ImageSearchRequestModel.SortType>()
     var output : MainViewModel.Output!
     
     
@@ -34,7 +35,7 @@ class MainViewModelUnitTest: XCTestCase {
         viewController = MainViewController(viewModel: viewModel)
         scheduler = TestScheduler(initialClock: 0, resolution: 0.01)
        
-        output = viewModel.transform(input: .init(searchAction: searchAction.asDriverOnErrorNever(), bottomScrollTriger: bottomScrollTriger.asDriverOnErrorNever(), cellClick: cellClick.asDriverOnErrorNever()))
+        output = viewModel.transform(input: .init(searchAction: searchAction.asDriverOnErrorNever(), bottomScrollTriger: bottomScrollTriger.asDriverOnErrorNever(), cellClick: cellClick.asDriverOnErrorNever(), sortTypeAction: sortTypeAction.asDriverOnErrorNever()))
         
         
     }
@@ -54,13 +55,14 @@ class MainViewModelUnitTest: XCTestCase {
         
         output.imageSearchModels
             .asObservable()
-            .map{ $0.count }
+            .map{ $0.first!.items.count }
             .bind(to: observer)
             .disposed(by: disposeBag)
 
         scheduler.start()
         
         let exceptEvents: [Recorded<Event<Int>>] = [
+            .next(0 , 0),
             .next(100 , 10)
         ]
         XCTAssertEqual(observer.events , exceptEvents)
@@ -71,39 +73,40 @@ class MainViewModelUnitTest: XCTestCase {
     func testSearch_강지윤강지_1페이지바로요청_첫번째_마지막_아이템체크(){
         //Given
        viewModel.itemCount = 10
-        let observer = scheduler.createObserver(ImageSearchModel.self)
-       
-        
-       
+        let observer = scheduler.createObserver(String?.self)
+
+
+
         //When
         scheduler.createHotObservable([.next(100 , "강지윤강지")])
                     .bind(to: searchAction)
                     .disposed(by: disposeBag)
-        
-        
+
+
         output.imageSearchModels
             .asObservable()
-            .map{ $0.first! }
+            .map{ $0.first!.items.first?.collection }
             .bind(to: observer)
             .disposed(by: disposeBag)
 
         output.imageSearchModels
             .asObservable()
-            .map{ $0.last! }
+            .map{ $0.first!.items.last?.collection }
             .bind(to: observer)
             .disposed(by: disposeBag)
-        
+
         scheduler.start()
-        
-        let exceptEvents: [Recorded<Event<ImageSearchModel>>] = [
+
+        let exceptEvents: [Recorded<Event<String?>>] = [
+            .next(0, nil),
+            .next(0, nil),
             .next(100 ,
-                  ImageSearchModel(collection: "cafe", datetime: "2011-11-07T08:21:16.000+09:00", displaySitename: "Daum카페", docURL: "http://cafe.daum.net/9311983/G61k/179", height: 960, imageURL: "http://cfile299.uf.daum.net/image/14398D3C4EB7165A31D326", thumbnailURL: "https://search3.kakaocdn.net/argon/130x130_85_c/AUqc5p0BwF2", width: 640)
-                 ),
+                  "cafe"),
             .next(100 ,
-                  ImageSearchModel(collection: "blog", datetime: "2021-07-15T12:34:00.000+09:00", displaySitename: "네이버블로그", docURL: "http://blog.naver.com/rkdnjs0011/222432440662", height: 326, imageURL: "https://postfiles.pstatic.net/MjAyMTA3MTVfNDMg/MDAxNjI2MzE5NjkzMzgy.ChRg6k1YcodkSmHkB6fqrWjflXs5qxfu4OdsBmLXHsAg.jxMtRoXwt38KdypSgVocFSCSGjNrqJ6pSui7Ze9o1-8g.JPEG.rkdnjs0011/output_1063547603.jpg?type=w580", thumbnailURL: "https://search3.kakaocdn.net/argon/130x130_85_c/8zM0DfXGitx", width: 580)
+                  "blog"
                  )
         ]
-        
+
         XCTAssertEqual(observer.events , exceptEvents)
     }
     
@@ -126,7 +129,7 @@ class MainViewModelUnitTest: XCTestCase {
         
         output.imageSearchModels
             .asObservable()
-            .map{ $0.count }
+            .map{ $0.first!.items.count }
             .bind(to: observer)
             .disposed(by: disposeBag)
 
@@ -135,6 +138,7 @@ class MainViewModelUnitTest: XCTestCase {
         //Then
         //검색을 요청할경우 페이징카운터 , TotalCount를 초기화 하기에 1번이 검색되는게 맞음
         let exceptEvents: [Recorded<Event<Int>>] = [
+            .next(0 , 0),
             .next(100 , 10)
         ]
         
@@ -148,42 +152,43 @@ class MainViewModelUnitTest: XCTestCase {
         //Given
         viewModel.itemCount = 10
         viewModel.pagingCount = 2
-        let observer = scheduler.createObserver(ImageSearchModel.self)
-      
-        
+        let observer = scheduler.createObserver(String?.self)
+
+
         //when
         scheduler.createHotObservable([.next(100 , "강지윤강지")])
                     .bind(to: searchAction)
                     .disposed(by: disposeBag)
-        
-        
+
+
         output.imageSearchModels
             .asObservable()
-            .map{ $0.first! }
+            .map{ $0.first!.items.first?.collection }
             .bind(to: observer)
             .disposed(by: disposeBag)
 
         output.imageSearchModels
             .asObservable()
-            .map{ $0.last! }
+            .map{ $0.first!.items.last?.collection }
             .bind(to: observer)
             .disposed(by: disposeBag)
-        
+
         scheduler.start()
-        
+
         //Then
-        let exceptEvents: [Recorded<Event<ImageSearchModel>>] = [
+        let exceptEvents: [Recorded<Event<String?>>] = [
+            .next(0, nil),
+            .next(0, nil),
             .next(100 ,
-                  ImageSearchModel(collection: "cafe", datetime: "2011-11-07T08:21:16.000+09:00", displaySitename: "Daum카페", docURL: "http://cafe.daum.net/9311983/G61k/179", height: 960, imageURL: "http://cfile299.uf.daum.net/image/14398D3C4EB7165A31D326", thumbnailURL: "https://search3.kakaocdn.net/argon/130x130_85_c/AUqc5p0BwF2", width: 640)
-                 ),
+                  "cafe"),
             .next(100 ,
-                  ImageSearchModel(collection: "blog", datetime: "2021-07-15T12:34:00.000+09:00", displaySitename: "네이버블로그", docURL: "http://blog.naver.com/rkdnjs0011/222432440662", height: 326, imageURL: "https://postfiles.pstatic.net/MjAyMTA3MTVfNDMg/MDAxNjI2MzE5NjkzMzgy.ChRg6k1YcodkSmHkB6fqrWjflXs5qxfu4OdsBmLXHsAg.jxMtRoXwt38KdypSgVocFSCSGjNrqJ6pSui7Ze9o1-8g.JPEG.rkdnjs0011/output_1063547603.jpg?type=w580", thumbnailURL: "https://search3.kakaocdn.net/argon/130x130_85_c/8zM0DfXGitx", width: 580)
+                  "blog"
                  )
         ]
-        
+
         XCTAssertEqual(observer.events , exceptEvents)
     }
-    
+//
     //1페이지 검색후
     //바텀에 도달하여 2페이지 검색요청
     func testSearch_강지윤강지_1페이지검색_2페이지인피니티스크롤(){
@@ -202,7 +207,7 @@ class MainViewModelUnitTest: XCTestCase {
         
         output.imageSearchModels
             .asObservable()
-            .map{ $0.count }
+            .map{ $0.first!.items.count }
             .bind(to: observer)
             .disposed(by: disposeBag)
 
@@ -212,6 +217,7 @@ class MainViewModelUnitTest: XCTestCase {
         //1번 아이템의 갯수 10개
         //2차 요청갯수 2개 토탈 12개 맞다.
         let exceptEvents: [Recorded<Event<Int>>] = [
+            .next(0 , 0),
             .next(100 , 10),
             .next(200 , 12)
         ]
@@ -227,48 +233,47 @@ class MainViewModelUnitTest: XCTestCase {
     func testSearch_강지윤강지_1페이지검색_2페이지인피니티스크롤_첫번째_마지막아이템체크(){
         //Given
         viewModel.itemCount = 10
-        let observer = scheduler.createObserver(ImageSearchModel.self)
-        
+        let observer = scheduler.createObserver(String?.self)
+
         //when
         scheduler.createHotObservable([.next(100 , "강지윤강지")])
                     .bind(to: searchAction)
                     .disposed(by: disposeBag)
-        
+
         scheduler.createHotObservable([.next(200 , ())])
                     .bind(to: bottomScrollTriger)
                     .disposed(by: disposeBag)
-        
-        
+
+
         output.imageSearchModels
             .asObservable()
-            .map{ $0.first! }
+            .map{ $0.first!.items.first?.collection }
             .bind(to: observer)
             .disposed(by: disposeBag)
 
         output.imageSearchModels
             .asObservable()
-            .map{ $0.last! }
+            .map{ $0.first!.items.last?.collection }
             .bind(to: observer)
             .disposed(by: disposeBag)
-        
+
         scheduler.start()
-        
+
         //Then
-        let exceptEvents: [Recorded<Event<ImageSearchModel>>] = [
+        let exceptEvents: [Recorded<Event<String?>>] = [
+            .next(0, nil),
+            .next(0, nil),
             .next(100 ,
-                  ImageSearchModel(collection: "cafe", datetime: "2011-11-07T08:21:16.000+09:00", displaySitename: "Daum카페", docURL: "http://cafe.daum.net/9311983/G61k/179", height: 960, imageURL: "http://cfile299.uf.daum.net/image/14398D3C4EB7165A31D326", thumbnailURL: "https://search3.kakaocdn.net/argon/130x130_85_c/AUqc5p0BwF2", width: 640)
-                 ),
+                  "cafe"),
             .next(100 ,
-                  ImageSearchModel(collection: "blog", datetime: "2021-07-15T12:34:00.000+09:00", displaySitename: "네이버블로그", docURL: "http://blog.naver.com/rkdnjs0011/222432440662", height: 326, imageURL: "https://postfiles.pstatic.net/MjAyMTA3MTVfNDMg/MDAxNjI2MzE5NjkzMzgy.ChRg6k1YcodkSmHkB6fqrWjflXs5qxfu4OdsBmLXHsAg.jxMtRoXwt38KdypSgVocFSCSGjNrqJ6pSui7Ze9o1-8g.JPEG.rkdnjs0011/output_1063547603.jpg?type=w580", thumbnailURL: "https://search3.kakaocdn.net/argon/130x130_85_c/8zM0DfXGitx", width: 580)
-                 ),
+                  "blog"),
             .next(200 ,
-                  ImageSearchModel(collection: "cafe", datetime: "2011-11-07T08:21:16.000+09:00", displaySitename: "Daum카페", docURL: "http://cafe.daum.net/9311983/G61k/179", height: 960, imageURL: "http://cfile299.uf.daum.net/image/14398D3C4EB7165A31D326", thumbnailURL: "https://search3.kakaocdn.net/argon/130x130_85_c/AUqc5p0BwF2", width: 640)
-                 ),
+                  "cafe"),
             .next(200 ,
-                  ImageSearchModel(collection: "news", datetime: "2016-06-28T06:40:05.000+09:00", displaySitename: "뉴스엔", docURL: "http://v.media.daum.net/v/20160628064006804", height: 2248, imageURL: "http://t1.daumcdn.net/news/201606/28/newsen/20160628064005690ekui.jpg", thumbnailURL: "https://search1.kakaocdn.net/argon/130x130_85_c/1r4wpPqMsVZ", width: 500)
+                  "news"
                  )
         ]
-        
+
         XCTAssertEqual(observer.events , exceptEvents)
     }
     
@@ -296,7 +301,7 @@ class MainViewModelUnitTest: XCTestCase {
         
         output.imageSearchModels
             .asObservable()
-            .map{ $0.count }
+            .map{ $0.first!.items.count }
             .bind(to: observer)
             .disposed(by: disposeBag)
 
@@ -307,6 +312,7 @@ class MainViewModelUnitTest: XCTestCase {
         //2차 요청갯수 2개 토탈 12개 맞다.
         //3차 요청시 더이상 요청할 아이템이없기에 요청이 생기지 않아 200에서 더이상 이벤트가 방출되지않는다.
         let exceptEvents: [Recorded<Event<Int>>] = [
+            .next(0 , 0),
             .next(100 , 10),
             .next(200 , 12)
         ]
@@ -328,13 +334,14 @@ class MainViewModelUnitTest: XCTestCase {
         
         output.imageSearchModels
             .asObservable()
-            .map{ $0.count }
+            .map{ $0.first!.items.count }
             .bind(to: observer)
             .disposed(by: disposeBag)
 
         scheduler.start()
         
         let exceptEvents: [Recorded<Event<Int>>] = [
+            .next(0 , 0),
             .next(100 , 30)
         ]
         XCTAssertEqual(observer.events , exceptEvents)
@@ -357,13 +364,14 @@ class MainViewModelUnitTest: XCTestCase {
         
         output.imageSearchModels
             .asObservable()
-            .map{ $0.count }
+            .map{ $0.first!.items.count }
             .bind(to: observer)
             .disposed(by: disposeBag)
 
         scheduler.start()
         
         let exceptEvents: [Recorded<Event<Int>>] = [
+            .next(0 , 0),
             .next(100 , 30),
             .next(200 , 60)
         ]
@@ -391,13 +399,14 @@ class MainViewModelUnitTest: XCTestCase {
         
         output.imageSearchModels
             .asObservable()
-            .map{ $0.count }
+            .map{ $0.first!.items.count }
             .bind(to: observer)
             .disposed(by: disposeBag)
 
         scheduler.start()
         
         let exceptEvents: [Recorded<Event<Int>>] = [
+            .next(0 , 0),
             .next(100 , 30),
             .next(200 , 60),
             .next(300 , 90)

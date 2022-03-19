@@ -13,6 +13,7 @@ import RxSwift
 import RxCocoa
 import RxRelay
 import RxGesture
+import RxDataSources
 
 
 class MainViewController: SuperViewControllerSetting<MainViewModel> {
@@ -26,8 +27,6 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
         $0.searchTextField.largeContentImage?.withTintColor(.gray) // 왼쪽 돋보기 모양 커스텀
         $0.searchTextField.borderStyle = .none // 기본으로 있는 회색배경 없애줌
         $0.searchTextField.leftView?.tintColor = .gray
-        
-
     }
     
     lazy var searchImageCollectionView : UICollectionView = {
@@ -40,21 +39,52 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
         item.contentInsets = .init(top: 2, leading: 2, bottom: 2, trailing: 2)
         let groupSize = itemSize
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 3)
+        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(40))
+        let headerElement = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize, elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
+        headerElement.pinToVisibleBounds = true
         let section = NSCollectionLayoutSection(group: group)
+        section.boundarySupplementaryItems = [headerElement]
         let compositionalLayout = UICollectionViewCompositionalLayout(section: section)
         let collectionView = UICollectionView(frame: CGRect(), collectionViewLayout: compositionalLayout)
         collectionView.backgroundColor = .primaryColorReverse
         collectionView.indicatorStyle = .white
         collectionView.register(ImageCollectionViewCell.self, forCellWithReuseIdentifier: ImageCollectionViewCell.id)
+        collectionView.register(ImageCellHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: ImageCellHeader.id)
         return collectionView
     }()
+    
+    var emptySearchView = UILabel().then{
+        $0.text = "검색 결과가 없습니다.\n다른 검색어로 검색해보세요."
+        $0.backgroundColor = .primaryColorReverse
+        $0.numberOfLines = 2
+        $0.textAlignment = .center
+        $0.textColor = .placeholderText
+        $0.isHidden = true
+    }
+    
+    var loadingView = LoadingView()
+    
+    var typeSettingSheetView = SpotBottomSheetView()
+    
+    lazy var imageSearchDataSource = RxCollectionViewSectionedReloadDataSource<ImageSearchSectionModel> { dataSource, collectionView , indexPath, item in
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageCollectionViewCell.id, for: indexPath) as! ImageCollectionViewCell
+        cell.itemSetting(item: item)
+        return cell
+    }
+    
+    
+    private let sortTypeAction = PublishSubject<ImageSearchRequestModel.SortType>()
+    
+    var sectionHeaderTypeChangeDelegate : SectionHeaderTypeChangeDelegate?
     
     
     override func uiDrawing() {
         view.addSubview(searchBar)
         view.addSubview(searchImageCollectionView)
-      
-
+        view.addSubview(emptySearchView)
+        view.addSubview(typeSettingSheetView)
+        view.addSubview(loadingView)
+        
         searchBar.snp.makeConstraints { make in
             make.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
         }
@@ -63,9 +93,18 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
             make.top.equalTo(searchBar.snp.bottom)
         }
         
-    
+        emptySearchView.snp.makeConstraints { make in
+            make.leading.bottom.trailing.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalTo(searchBar.snp.bottom)
+        }
         
+        typeSettingSheetView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         
+        loadingView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
     }
     
     override func uiSetting() {
@@ -74,6 +113,20 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
             .setDelegate(self)
             .disposed(by: disposeBag)
 
+        
+        imageSearchDataSource.configureSupplementaryView = { [weak self] (dataSource, collectionView, kind, indexPath) in
+            guard let self = self else { return UICollectionReusableView() }
+            if kind == UICollectionView.elementKindSectionHeader {
+                let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: ImageCellHeader.id, for: indexPath) as! ImageCellHeader
+                self.sectionHeaderTypeChangeDelegate = headerView
+                headerView.infoButtonDidTappedCallback = {
+                    self.typeSettingSheetView.showBottomSheet()
+                }
+                return headerView
+            } else {
+                return UICollectionReusableView()
+            }
+        }
     }
     
     override func viewModelBinding() {
@@ -91,27 +144,46 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
      
         let cellClick = searchImageCollectionView.rx.modelSelected(ImageSearchModel.self).asDriverOnErrorNever()
         
+        typeSettingSheetView.sortTypeViewArray.forEach{ item in
+            item.rx.tapGesture()
+                .when(.recognized)
+                .map{ _ in item.item }
+                .subscribe(onNext: { [weak self] item in
+                    guard let self = self else { return  }
+                    self.typeSettingSheetView.hideBottomSheet()
+                    self.sortTypeAction.onNext(item)
+                })
+                .disposed(by: disposeBag)
+        }
+        
+        
         let output = viewModel.transform(input: .init(
             searchAction: searchAction ,
             bottomScrollTriger: bottomScrollTriger,
-            cellClick: cellClick
+            cellClick: cellClick,
+            sortTypeAction: sortTypeAction.asDriverOnErrorNever()
         ))
         
         
-        
         output.imageSearchModels
-            .drive(searchImageCollectionView.rx.items(cellIdentifier: ImageCollectionViewCell.id, cellType: ImageCollectionViewCell.self)){(index , element , cell) in
-                cell.itemSetting(item: element)
-            }
+            .drive(searchImageCollectionView.rx.items(dataSource: imageSearchDataSource))
             .disposed(by: disposeBag)
-        
+
+        output.imageSearchModels
+            .map{ $0.first?.items.count != 0 }
+            .drive(emptySearchView.rx.isHidden)
+            .disposed(by: disposeBag)
+
+
+
         output.searchClear
             .drive{ [weak self] _ in
                 guard let self = self else { return }
-                return self.searchImageCollectionView.setContentOffset(.zero, animated: true)
+                self.view.endEditing(true)
+                self.searchImageCollectionView.setContentOffset(.zero, animated: true)
             }
             .disposed(by: disposeBag)
-        
+
         output.outputError
             .drive(onNext: { [ weak self] value in
                 guard let self = self else { return }
@@ -121,7 +193,31 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
                 self.present(alert, animated: true, completion: nil)
             })
             .disposed(by: disposeBag)
-     
+//
+//
+//
+        output.sortType
+            .drive{ [weak self] item in
+                guard let self = self else { return }
+                self.typeSettingSheetView.sortTypeSetting(type: item)
+            }
+            .disposed(by: disposeBag)
+        
+        output.sortType
+            .drive{ [weak self] item in
+                guard let self = self else { return }
+                self.sectionHeaderTypeChangeDelegate?.sortTypeAction(type: item)
+            }
+            .disposed(by: disposeBag)
+        
+        output.outputActivity
+            .drive{ [weak self] loading in
+                guard let self = self else { return }
+                self.loadingView.loadingViewSetting(loading: loading)
+            }
+           .disposed(by: disposeBag)
+        
+        
     }
     
 
@@ -131,6 +227,8 @@ extension MainViewController : UICollectionViewDelegate{
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         view.endEditing(true)
     }
+    
+ 
 }
 
 

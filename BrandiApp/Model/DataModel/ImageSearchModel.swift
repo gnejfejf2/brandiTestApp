@@ -6,11 +6,16 @@
 //
 
 import Foundation
+import RxDataSources
 // MARK: - Document
 
 typealias ImageSearchModels = [ImageSearchModel]
 
-struct ImageSearchModel: Codable , Equatable {
+struct ImageSearchModel: Codable , Equatable , IdentifiableType {
+    typealias Identity = String
+    
+    var identity : Identity = UUID().uuidString
+    
     let collection, datetime, displaySitename: String
     let docURL: String
     let height: Int
@@ -44,3 +49,6 @@ struct ImageSearchModel: Codable , Equatable {
     }
     
 }
+
+
+

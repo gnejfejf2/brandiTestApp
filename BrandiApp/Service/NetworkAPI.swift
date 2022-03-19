@@ -44,9 +44,7 @@ extension NetworkAPI : TargetType {
     var task: Task {
         switch self {
         case .search(let parameters) :
-            print(parameters)
             return .requestParameters(parameters: parameters.toDictionary , encoding: URLEncoding.queryString)
-            
         }
     }
     var sampleData: Data {
