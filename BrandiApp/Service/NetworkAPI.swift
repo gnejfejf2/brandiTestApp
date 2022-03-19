@@ -50,7 +50,7 @@ extension NetworkAPI : TargetType {
     var sampleData: Data {
         switch self {
         case .search(let parmas ) :
-            return stubbedResponse("Search\(parmas.query)\(parmas.page)")
+            return stubbedResponse("Search\(parmas.sort.rawValue)\(parmas.query)\(parmas.page)")
         default :
             return stubbedResponse("getUserInfo")
         }
@@ -59,6 +59,7 @@ extension NetworkAPI : TargetType {
     
     
     func stubbedResponse(_ filename: String) -> Data! {
+        print(filename)
         let bundlePath = Bundle.main.path(forResource: "Json", ofType: "bundle")
         let bundle = Bundle(path: bundlePath!)
         let path = bundle?.path(forResource: filename, ofType: "json")
