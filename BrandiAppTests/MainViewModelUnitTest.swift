@@ -414,4 +414,75 @@ class MainViewModelUnitTest: XCTestCase {
         
         XCTAssertEqual(observer.events , exceptEvents)
     }
+    
+    
+    func testSearch_강지윤강지_1_정확도순_최신순(){
+
+        viewModel.itemCount = 10
+        let observer = scheduler.createObserver(Int.self)
+        
+       
+        
+        scheduler.createHotObservable([.next(100 , "강지윤강지")])
+                    .bind(to: searchAction)
+                    .disposed(by: disposeBag)
+        
+        scheduler.createHotObservable([.next(200 , .recency)])
+                    .bind(to: sortTypeAction)
+                    .disposed(by: disposeBag)
+        
+        
+        output.imageSearchModels
+            .asObservable()
+            .map{ $0.first!.items.count }
+            .bind(to: observer)
+            .disposed(by: disposeBag)
+
+        scheduler.start()
+        
+        let exceptEvents: [Recorded<Event<Int>>] = [
+            .next(0 , 0),
+            .next(100 , 10),
+            .next(200 , 10)
+        ]
+        XCTAssertEqual(observer.events , exceptEvents)
+    }
+    
+    
+   
+    func testSearch_강지윤강지_1_정확도순_최신순_2페이지요청(){
+
+        viewModel.itemCount = 10
+        let observer = scheduler.createObserver(Int.self)
+        
+       
+        
+        scheduler.createHotObservable([.next(100 , "강지윤강지")])
+                    .bind(to: searchAction)
+                    .disposed(by: disposeBag)
+        
+        scheduler.createHotObservable([.next(200 , .recency)])
+                    .bind(to: sortTypeAction)
+                    .disposed(by: disposeBag)
+        
+        scheduler.createHotObservable([.next(300 , ())])
+                    .bind(to: bottomScrollTriger)
+                    .disposed(by: disposeBag)
+        
+        output.imageSearchModels
+            .asObservable()
+            .map{ $0.first!.items.count }
+            .bind(to: observer)
+            .disposed(by: disposeBag)
+
+        scheduler.start()
+        
+        let exceptEvents: [Recorded<Event<Int>>] = [
+            .next(0 , 0),
+            .next(100 , 10),
+            .next(200 , 10),
+            .next(300 , 13)
+        ]
+        XCTAssertEqual(observer.events , exceptEvents)
+    }
 }
