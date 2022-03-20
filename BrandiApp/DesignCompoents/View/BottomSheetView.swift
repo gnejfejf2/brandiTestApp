@@ -9,9 +9,7 @@ import UIKit
 import SnapKit
 import Then
 
-protocol BottomSheetItemSettingProtocol {
-    func bottomSheetItemSetting()
-}
+
 
 protocol BottomSheetSettingProtocol{
     func uiSetting()

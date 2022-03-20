@@ -59,7 +59,6 @@ extension NetworkAPI : TargetType {
     
     
     func stubbedResponse(_ filename: String) -> Data! {
-        print(filename)
         let bundlePath = Bundle.main.path(forResource: "Json", ofType: "bundle")
         let bundle = Bundle(path: bundlePath!)
         let path = bundle?.path(forResource: filename, ofType: "json")

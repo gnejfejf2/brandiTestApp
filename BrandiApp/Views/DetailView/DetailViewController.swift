@@ -16,17 +16,18 @@ import RxGesture
 
 class DetailViewController : SuperViewControllerSetting<DetailViewModel>{
     
+    
+    //UI
+    lazy var imageScrollView = ImageScrollView(frame: view.safeAreaLayoutGuide.layoutFrame)
+    
+    
     var exitButton  = UIButton().then{
         $0.setImage(UIImage(systemName : "xmark"), for: .normal)
         $0.tintColor = .primaryColor
-        
         $0.snp.makeConstraints { make in
             make.width.height.equalTo(44)
         }
     }
-
-    lazy var imageScrollView = ImageScrollView(frame: view.safeAreaLayoutGuide.layoutFrame)
-    
     
     var imageInformationText = BasePaddingLabelView().then {
         $0.textColor = .white.withAlphaComponent(0.75)

@@ -1,14 +1,10 @@
 
 import Foundation
 
-//프로토콜 자체에서 데이터 변환이 일어나기때문에
 //Class 에서만 사용이가능하도록 AnyObject 채택
 protocol ScrollPagingProtocl : AnyObject {
     
-    
-    
     var totalCount : Int { get set}
-    
     var itemCount : Int { get }
   
     //페이징카운트
@@ -48,13 +44,26 @@ extension ScrollPagingProtocl {
             self.pagingCount += 1
         }
     }
-    //이렇게 복잡하게 컨트롤 하지않고 다음 검색에서 주는 is_end , pagingCount 두개만을 사용해도 되지만
-    //한번더 계산함으로 확실하게? 하고 싶어서 직접 아이템의 갯수를 더해서 체크를 했다
-    //좋은 방식인가? 는 의문이 들긴하다
+    
+    //현재 방식은 API 주는 데이터를 최대한 활용하는 방법으로 페이징 카운트를 계산하였다.
+    
+    
+    //기존의 제가 진행 하던 다른 프로젝트에서 페이징을 컨트롤 할때는
+    //N개의 데이터를 요청 -> N개의 데이터가 내려올 경우 -> 페이징카운트+ , 다음페이징요청을 컨트롤하는 Bool값을 True
+    //N개의 데이터를 요청 -> N개보다 적은 데이터가 내려올경우 -> 페이징카운트유지 , 다음페이징요청을 컨트롤하는 Bool값을 False
+    //예시 함수
+    //    func pagingCountChecking(requestItemCount : Int)  {
+    //        self.totalCount += requestItemCount
+    //
+    //        if(self.totalCount < self.itemCount * self.pagingCount){
+    //            self.scrollPagingCall = false
+    //        }else{
+    //            self.pagingCount += 1
+    //        }
+    //    }
+    
     func pagingAbleChecking(paingAble : PagingAbleModel , totalCount : Int) -> Bool {
         pagingCountSetting(totalCount: totalCount)
-        print(paingAble)
-        print(totalCount)
         return !paingAble.isEnd && paingAble.pageableCount >= totalCount
     }
     

@@ -11,12 +11,18 @@ import RxSwift
 import RxCocoa
 import RxDataSources
 
+
+protocol BottomSheetItemSettingProtocol {
+    var sortTypeViewArray : [SortTypeStackView] { get set }
+    
+    func bottomSheetItemSetting()
+    func sortTypeSetting(type : ImageSearchRequestModel.SortType)
+}
+
 class SpotBottomSheetView : BottomSheetView , BottomSheetItemSettingProtocol {
     
-   
     
-    
-    
+    //UI
     lazy var mainKeyword = UILabel().then{
         $0.numberOfLines = 1
         $0.textColor = .black
@@ -24,29 +30,29 @@ class SpotBottomSheetView : BottomSheetView , BottomSheetItemSettingProtocol {
         $0.font = UIFont.systemFont(ofSize: 18, weight: .bold)
         $0.text = "정렬"
     }
-     
-    var 인기순 = SortTypeStackView(item : .accuracy).then{
+    
+    var 정확도순 = SortTypeStackView(item : .accuracy).then{
         $0.typeLabel.text =  "정확도순"
         $0.selectSetting()
     }
-    var 정확도순 = SortTypeStackView(item : .recency).then{
+    var 최신순 = SortTypeStackView(item : .recency).then{
         $0.typeLabel.text =  "최신순"
         $0.unSelecteSetting()
     }
-   
     
     
     
-    lazy var sortTypeViewArray = [인기순,정확도순]
+    //Other
+    lazy var sortTypeViewArray = [정확도순,최신순]
     
-  
+    
     
     
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         bottomSheetItemSetting()
-   
+        
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -60,10 +66,13 @@ class SpotBottomSheetView : BottomSheetView , BottomSheetItemSettingProtocol {
             guard let self = self else { return }
             self.bottomSheetView.addArrangedSubview($0)
         }
-       
+        
     }
     
-    
+}
+
+
+extension BottomSheetItemSettingProtocol {
     func sortTypeSetting(type : ImageSearchRequestModel.SortType){
         sortTypeViewArray.forEach{
             if($0.item == type){
@@ -73,8 +82,4 @@ class SpotBottomSheetView : BottomSheetView , BottomSheetItemSettingProtocol {
             }
         }
     }
-    
-    
 }
-
-

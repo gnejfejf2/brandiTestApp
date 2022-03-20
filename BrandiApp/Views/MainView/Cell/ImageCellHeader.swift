@@ -19,7 +19,7 @@ class ImageCellHeader: UICollectionReusableView , SectionHeaderTypeChangeDelegat
     static var id: String { NSStringFromClass(Self.self).components(separatedBy: ".").last ?? "" }
     
    
-    
+    //UI
     let sortTypeButton = UIButton().then{
         $0.setTitle(ImageSearchRequestModel.SortType.accuracy.rawValue, for: .normal)
         $0.setImage(UIImage(systemName: "arrow.up.arrow.down"), for: .normal)
@@ -29,8 +29,10 @@ class ImageCellHeader: UICollectionReusableView , SectionHeaderTypeChangeDelegat
         $0.titleLabel?.font = UIFont.systemFont(ofSize: 14)
     }
     
-    // Callback closure to handle info button tap
-    var infoButtonDidTappedCallback: (() -> Void)?
+    //Other
+    //헤더를 클릭했을때 생기는 함수변수
+    //Swift에서 함수는 일급객체
+    var headerClickAction: (() -> Void)?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -53,7 +55,7 @@ class ImageCellHeader: UICollectionReusableView , SectionHeaderTypeChangeDelegat
     }
  
     @objc func clickAction(){
-        infoButtonDidTappedCallback?()
+        headerClickAction?()
     }
 }
 

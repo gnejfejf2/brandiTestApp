@@ -17,6 +17,8 @@ import RxDataSources
 
 
 class MainViewController: SuperViewControllerSetting<MainViewModel> {
+    
+    //UI
     lazy var searchBar = DoneSearchBar().then{
         $0.placeholder = "검색어를 입력해주세요."
         $0.searchBarStyle = .minimal
@@ -66,6 +68,9 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
     
     var typeSettingSheetView = SpotBottomSheetView()
     
+    
+    
+    //DataSource
     lazy var imageSearchDataSource = RxCollectionViewSectionedReloadDataSource<ImageSearchSectionModel> { dataSource, collectionView , indexPath, item in
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageCollectionViewCell.id, for: indexPath) as! ImageCollectionViewCell
         cell.itemSetting(item: item)
@@ -73,6 +78,8 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
     }
     
     
+    
+    //Other
     private let sortTypeAction = PublishSubject<ImageSearchRequestModel.SortType>()
     
     var sectionHeaderTypeChangeDelegate : SectionHeaderTypeChangeDelegate?
@@ -119,7 +126,7 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
             if kind == UICollectionView.elementKindSectionHeader {
                 let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: ImageCellHeader.id, for: indexPath) as! ImageCellHeader
                 self.sectionHeaderTypeChangeDelegate = headerView
-                headerView.infoButtonDidTappedCallback = {
+                headerView.headerClickAction = {
                     self.typeSettingSheetView.showBottomSheet()
                 }
                 return headerView
@@ -193,9 +200,7 @@ class MainViewController: SuperViewControllerSetting<MainViewModel> {
                 self.present(alert, animated: true, completion: nil)
             })
             .disposed(by: disposeBag)
-//
-//
-//
+
         output.sortType
             .drive{ [weak self] item in
                 guard let self = self else { return }

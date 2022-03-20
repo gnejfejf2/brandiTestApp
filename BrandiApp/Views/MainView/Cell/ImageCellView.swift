@@ -13,19 +13,15 @@ import Kingfisher
 
 class ImageCollectionViewCell: UICollectionViewCell, CellSettingProtocl {
    
-    
-  
-    
-   
     static var id: String { NSStringFromClass(Self.self).components(separatedBy: ".").last ?? "" }
     
-    
+    //UI
     var mainImageView = UIImageView().then{
         $0.contentMode = .scaleToFill
         
     }
     
-    
+    //Other
     var item: ImageSearchModel?
     
     override init(frame: CGRect) {
@@ -55,7 +51,6 @@ class ImageCollectionViewCell: UICollectionViewCell, CellSettingProtocl {
     
     func itemSetting(item : ImageSearchModel) {
         mainImageView.kf.setImage(with: URL(string: item.thumbnailURL))
-        
     }
 }
 

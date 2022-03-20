@@ -1,7 +1,13 @@
 import Foundation
 import UIKit
 
-class MainViewCoordinator : BaseCoordinator {
+
+protocol MainViewCoorinatorProtocol {
+    func openDetailView(_ imageSearchModel : ImageSearchModel)
+}
+
+
+class MainViewCoordinator : BaseCoordinator , MainViewCoorinatorProtocol {
  
     override func start() {
         let viewModel = MainViewModel(builder: .init(coordinator: self))
@@ -11,11 +17,12 @@ class MainViewCoordinator : BaseCoordinator {
 //        
     }
     
+    
     func openDetailView(_ imageSearchModel : ImageSearchModel){
         let coordinator = DetailViewCoordinator(navigationController: navigationController)
         coordinator.imageSearchModel = imageSearchModel
         coordinator.start()
     }
     
-    
 }
+
